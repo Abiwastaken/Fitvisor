@@ -1,0 +1,13 @@
+flask
+flask-cors
+mysql-connector-python
+python-dotenv
+werkzeug
+opencv-python
+mediapipe
+flask-socketio
+eventlet
+
+# New Dependencies
+sendgrid
+certifi
