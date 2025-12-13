@@ -117,6 +117,7 @@ export default function Dashboard({ onSelectExercise, onNavigateHome }) {
             transition={{ delay: 0.3 }}
           >
             {/* Home Button (New) */}
+            {/* ================= HOME BUTTON ================= */}
             <motion.button
               onClick={onNavigateHome}
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#1E3A8A] shadow-md border border-[#DBEAFE] font-bold hover:shadow-lg transition-all"

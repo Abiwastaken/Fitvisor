@@ -11,6 +11,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
   const [signInEmail, setSignInEmail] = useState("")
   const [signInPassword, setSignInPassword] = useState("")
   const [forgotEmail, setForgotEmail] = useState("")
+  //password hashing 
 
   const handleSignIn = (e) => {
     e.preventDefault()
@@ -43,9 +44,8 @@ const LoginSignup = ({ onLoginSuccess }) => {
       >
         {/* ================= SIGN UP FORM ================= */}
         <div
-          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${
-            isActive && !isForgot ? "translate-x-full opacity-100 z-[5]" : "opacity-0 z-0"
-          }`}
+          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${isActive && !isForgot ? "translate-x-full opacity-100 z-[5]" : "opacity-0 z-0"
+            }`}
         >
           <form onSubmit={handleSignUp} className="bg-white flex items-center justify-center flex-col h-full px-10">
             <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Create Account</h1>
@@ -68,9 +68,8 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
         {/* ================= SIGN IN FORM ================= */}
         <div
-          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${
-            isActive || isForgot ? "translate-x-full pointer-events-none opacity-0" : "opacity-100 pointer-events-auto"
-          }`}
+          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${isActive || isForgot ? "translate-x-full pointer-events-none opacity-0" : "opacity-100 pointer-events-auto"
+            }`}
         >
           <form onSubmit={handleSignIn} className="bg-white flex items-center justify-center flex-col h-full px-10">
             <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Sign In</h1>
@@ -116,9 +115,8 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
         {/* ================= FORGOT PASSWORD FORM ================= */}
         <div
-          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${
-            isForgot ? "translate-x-full opacity-100 pointer-events-auto z-[10]" : "opacity-0 pointer-events-none z-0"
-          }`}
+          className={`absolute top-0 h-full transition-all duration-700 ease-in-out left-0 w-1/2 ${isForgot ? "translate-x-full opacity-100 pointer-events-auto z-[10]" : "opacity-0 pointer-events-none z-0"
+            }`}
         >
           <form className="bg-white flex items-center justify-center flex-col h-full px-10">
             <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Reset Password</h1>
@@ -156,20 +154,17 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
         {/* ================= PANELS ================= */}
         <div
-          className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out ${
-            isActive ? "-translate-x-full rounded-r-[150px]" : "rounded-l-[150px]"
-          }`}
+          className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-all duration-700 ease-in-out ${isActive ? "-translate-x-full rounded-r-[150px]" : "rounded-l-[150px]"
+            }`}
         >
           <div
-            className={`bg-gradient-to-r from-[#3B82F6] to-[#1E3A8A] text-white h-full relative -left-full w-[200%] transition-all duration-700 ease-in-out ${
-              isActive ? "translate-x-1/2" : "translate-x-0"
-            }`}
+            className={`bg-gradient-to-r from-[#3B82F6] to-[#1E3A8A] text-white h-full relative -left-full w-[200%] transition-all duration-700 ease-in-out ${isActive ? "translate-x-1/2" : "translate-x-0"
+              }`}
           >
             {/* LEFT PANEL */}
             <div
-              className={`absolute w-1/2 h-full flex flex-col justify-center items-center px-8 text-center ${
-                isActive ? "translate-x-0" : "-translate-x-[200%]"
-              } transition-all duration-700`}
+              className={`absolute w-1/2 h-full flex flex-col justify-center items-center px-8 text-center ${isActive ? "translate-x-0" : "-translate-x-[200%]"
+                } transition-all duration-700`}
             >
               <h1 className="text-4xl font-bold mb-5">Welcome Back!</h1>
               <p className="text-sm opacity-90 mb-6">Log in to continue your fitness journey.</p>
@@ -189,9 +184,8 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
             {/* RIGHT PANEL */}
             <div
-              className={`absolute right-0 w-1/2 h-full flex flex-col justify-center items-center px-8 text-center transition-all duration-700 ${
-                isActive ? "translate-x-[200%]" : "translate-x-0"
-              }`}
+              className={`absolute right-0 w-1/2 h-full flex flex-col justify-center items-center px-8 text-center transition-all duration-700 ${isActive ? "translate-x-[200%]" : "translate-x-0"
+                }`}
             >
               <h1 className="text-4xl font-bold mb-5">Join FitVisor</h1>
               <p className="text-sm opacity-90 mb-6">Create an account and start your transformation.</p>
