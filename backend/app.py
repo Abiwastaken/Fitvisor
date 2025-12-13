@@ -519,6 +519,11 @@ def handle_connect():
 def handle_disconnect():
     print('Client disconnected')
 
+@socketio.on('start_exercise')
+def handle_start_exercise():
+    detector.start_session()
+
+
 @socketio.on('process_data')
 def handle_data(data):
     # data structure: { 'landmarks': {...}, 'angles': {...}, 'type': 'Squats' }

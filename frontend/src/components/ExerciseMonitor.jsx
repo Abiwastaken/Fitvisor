@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import './ExerciseMonitor.css';
 import io from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Maximize } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Maximize, Hand, Play } from 'lucide-react';
 import { Pose } from '@mediapipe/pose';
 import { Camera } from '@mediapipe/camera_utils';
+import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import { POSE_CONNECTIONS } from '@mediapipe/pose';
 
 const SOCKET_URL = 'http://localhost:5000';
 
@@ -14,7 +16,8 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
     const [socket, setSocket] = useState(null);
-    const [stats, setStats] = useState({ reps: 0, feedback: "Prepare...", stage: null, completed: false });
+    const [stats, setStats] = useState({ reps: 0, feedback: "Raise palm to start", stage: null, completed: false, isActive: false });
+    const [gestureProgress, setGestureProgress] = useState(0);
     const [isConnected, setIsConnected] = useState(false);
     const [cameraStatus, setCameraStatus] = useState("Initializing...");
     const [userMessage, setUserMessage] = useState("Stand back and show full body");
@@ -35,6 +38,7 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
 
         newSocket.on('stats_update', (data) => {
             setStats(data);
+            setGestureProgress(data.gestureProgress || 0);
         });
 
         newSocket.on('disconnect', () => {
@@ -96,7 +100,6 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
             if (!results.poseLandmarks) {
                 setIsBodyVisible(false);
                 setUserMessage("No person detected");
-                setCurrentStage(null);
                 return;
             }
 
@@ -112,25 +115,19 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
 
             if (!isVisible) {
                 setUserMessage("Adjust camera to view whole body");
-                // We can optionally skip sending data if body isn't fully visible to prevent bad reps
-                // But let's send what we have if we want partial tracking, or block it. 
-                // The requirement says "if camera position is not polaced correctly then show the messege"
-                // So we show message.
-                return;
+                // We show message but still process to allow gesture detection if feasible
+            } else {
+                setUserMessage("");
             }
 
             // 2. Normalization relative to Hip
-            // Left Hip = 23, Right Hip = 24
             const leftHip = landmarks[23];
             const rightHip = landmarks[24];
-
             const hipCenterX = (leftHip.x + rightHip.x) / 2;
             const hipCenterY = (leftHip.y + rightHip.y) / 2;
             const hipCenterZ = (leftHip.z + rightHip.z) / 2;
 
             const normalizedLandmarks = {};
-            // Map loop to create normalized dictionary
-            // We'll just map commonly used ones to names for backend readability or index
             const landmarkNames = {
                 11: "left_shoulder", 12: "right_shoulder",
                 13: "left_elbow", 14: "right_elbow",
@@ -152,15 +149,23 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                 }
             }
 
-            // 3. Form Check (Pushup specific or general)
-            // Just basic one: "Be in form".
-            // If Pushup, check if body is horizontal? Or just check if "ready"
-            if (exerciseType === 'Push-ups') {
-                // Check if prone? Maybe checking nose Y vs hip Y not being too far vertical?
-                // For now, let's trust the "Adjust camera" covers most geometry issues.
-                setUserMessage(""); // Clear message if visible
-            } else {
-                setUserMessage("");
+            // 3. Draw on Canvas
+            const canvasCtx = overlayCanvasRef.current?.getContext('2d');
+            if (canvasCtx && overlayCanvasRef.current) {
+                canvasCtx.save();
+                canvasCtx.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+
+                // Draw the image first (optional if transparent over video, but good for saving later)
+                // canvasCtx.drawImage(results.image, 0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+
+                // Draw skeleton
+                if (results.poseLandmarks) {
+                    drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                        { color: '#00FF00', lineWidth: 4 });
+                    drawLandmarks(canvasCtx, results.poseLandmarks,
+                        { color: '#FF0000', lineWidth: 2 });
+                }
+                canvasCtx.restore();
             }
 
             // 4. Calculate Angles
@@ -196,6 +201,12 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
             stopRecordingAndUpload();
         }
     }, [stats.completed]);
+
+    const handleStart = () => {
+        if (socket && socket.connected) {
+            socket.emit('start_exercise');
+        }
+    };
 
     const startRecording = () => {
         if (videoRef.current && videoRef.current.srcObject) {
@@ -251,7 +262,7 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
         formData.append('video', videoBlob, 'exercise_session.webm');
         formData.append('userId', userId); // Use prop
         formData.append('exerciseType', exerciseType);
-        formData.append('reps', 5);
+        formData.append('reps', stats.reps);
 
         try {
             const response = await fetch('http://localhost:5000/api/upload-video', {
@@ -275,7 +286,6 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
     };
 
     const calculateAngle = (a, b, c) => {
-
         const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
         let angle = Math.abs(radians * 180.0 / Math.PI);
         if (angle > 180.0) angle = 360 - angle;
@@ -323,19 +333,91 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                     muted
                     autoPlay
                 />
-                {/* Overlay canvas for keypoints */}
+
+                {/* Canvas Overlay for MediaPipe */}
                 <canvas
                     ref={overlayCanvasRef}
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    className="absolute inset-0 w-full h-full transform -scale-x-100 pointer-events-none"
+                    width={640}
+                    height={480}
                 />
 
-                {/* 
-                   We don't need a canvas for drawing unless we want to debug.
-                   We assume "do no show the pipeliojnne" means don't draw the skeleton overlay.
-                */}
+                {/* Touchless Mode Overlay (When NOT Active) */}
+                {/* Control Overlay */}
+                <AnimatePresence>
+                    {(!stats.isActive || gestureProgress > 0) && !showCongrats && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
+                        >
+                            {!stats.isActive ? (
+                                /* START SCREEN */
+                                <div className="bg-slate-900/90 p-8 rounded-3xl border border-blue-500/30 flex flex-col items-center gap-6 max-w-sm text-center shadow-2xl shadow-blue-500/10 backdrop-blur-md">
+                                    <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 animate-pulse">
+                                        <Play size={40} className="text-white ml-2" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black text-white mb-2">Ready to Workout?</h3>
+                                        <p className="text-slate-400 text-sm mb-2">
+                                            Make sure your full body is visible.
+                                        </p>
+                                        <div className="flex items-center gap-2 justify-center text-xs text-blue-300 bg-blue-500/10 py-1 px-3 rounded-full border border-blue-500/20">
+                                            <Hand size={14} />
+                                            <span>Show Palm for 5s to Finish</span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleStart}
+                                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2"
+                                    >
+                                        START SESSION
+                                    </button>
+                                </div>
+                            ) : (
+                                /* STOPPING FEEDBACK (Only visible if gestureProgress > 0 due to outer condition) */
+                                <div className="bg-slate-900/80 p-8 rounded-3xl border border-blue-500/30 flex flex-col items-center gap-5 max-w-sm text-center shadow-2xl shadow-blue-500/10">
+
+                                    {/* Circular Progress Ring */}
+                                    <div className="relative w-32 h-32 flex items-center justify-center">
+                                        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(59, 130, 246, 0.2)" strokeWidth="6" />
+                                            <circle
+                                                cx="50" cy="50" r="42" fill="none"
+                                                stroke={gestureProgress >= 100 ? "#22c55e" : "#3b82f6"}
+                                                strokeWidth="6" strokeLinecap="round"
+                                                strokeDasharray={`${2 * Math.PI * 42}`}
+                                                strokeDashoffset={`${2 * Math.PI * 42 * (1 - gestureProgress / 100)}`}
+                                                style={{ transition: 'stroke-dashoffset 0.3s ease-out, stroke 0.3s ease' }}
+                                            />
+                                        </svg>
+                                        <motion.div
+                                            className={`p-5 rounded-full ${gestureProgress > 0 ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}
+                                            animate={{ scale: gestureProgress > 0 ? [1, 1.05, 1] : 1 }}
+                                            transition={{ repeat: Infinity, duration: 1 }}
+                                        >
+                                            {gestureProgress > 0 && gestureProgress < 100 ? (
+                                                <span className="text-4xl font-black text-white">{Math.ceil(5 - (gestureProgress / 20))}</span>
+                                            ) : (
+                                                <Hand size={40} className="text-blue-400" />
+                                            )}
+                                        </motion.div>
+                                    </div>
+
+                                    <h3 className="text-2xl font-bold text-white">Ending Session...</h3>
+                                    <p className="text-slate-300">
+                                        Hold palm steady to finish.
+                                    </p>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Status Overlay */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-full px-4">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-full px-4 z-30">
                     {/* User Guidance Message */}
                     <AnimatePresence>
                         {userMessage && (
@@ -352,21 +434,20 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                     </AnimatePresence>
                 </div>
 
-
                 {/* Feedback Overlay (Bottom) */}
                 <motion.div
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     key={stats.feedback} // Re-animate on feedback change
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2"
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
                 >
                     <div className={`
-                px-6 py-3 rounded-full backdrop-blur-xl border border-white/20 shadow-xl
-                flex items-center gap-3
-                ${stats.feedback.toLowerCase().includes('good') || stats.feedback.toLowerCase().includes('great') || stats.feedback.toLowerCase().includes('jump')
+                        px-6 py-3 rounded-full backdrop-blur-xl border border-white/20 shadow-xl
+                        flex items-center gap-3
+                        ${stats.feedback.toLowerCase().includes('good') || stats.feedback.toLowerCase().includes('great') || stats.feedback.toLowerCase().includes('jump')
                             ? 'bg-green-500/20 text-green-300'
                             : 'bg-blue-500/20 text-blue-200'}
-            `}>
+                    `}>
                         {stats.feedback.toLowerCase().includes('good') ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                         <span className="text-lg font-bold">{stats.feedback}</span>
                     </div>
@@ -394,9 +475,9 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                             <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
                                 <CheckCircle size={40} className="text-white" />
                             </div>
-                            <h2 className="text-3xl font-black text-white mb-2">Target Reached!</h2>
+                            <h2 className="text-3xl font-black text-white mb-2">Session Complete!</h2>
                             <p className="text-slate-400 mb-8">
-                                You accidentally crushed 5 reps. Video recorded for your coach.
+                                You crushed <span className="text-white font-bold">{stats.reps}</span> reps! Video recorded.
                             </p>
 
                             {isUploading && (
