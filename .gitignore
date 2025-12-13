@@ -1,0 +1,22 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+hack/
+
+
+Training Data/Pushups/data/
+Training Data/Squats/data/
+Training Data/Pushups/valid/*.mp4
+Training Data/Pushups/invalid/*.mp4
+Training Data/Squats/valid/*.mp4
+Training Data/Squats/invalid/*.mp4
+*.npy
+*.mp4
+*.avi
+*.mov
+backend/__pycache__/
+backend/model/__pycache__/
+.DS_Store
+backend/model/tempCodeRunnerFile.py
