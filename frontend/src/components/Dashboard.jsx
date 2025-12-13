@@ -1,298 +1,351 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faUser, faHome, faTrophy, faFire, faBullseye, faChevronRight } from "@fortawesome/free-solid-svg-icons"
+import { useState, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+    Activity,
+    Flame,
+    Trophy,
+    Target,
+    ChevronRight,
+    Dumbbell,
+    TrendingUp,
+    LayoutGrid,
+    User,
+    LogOut,
+    Home
+} from "lucide-react"
 
-// Palette Reference:
-// White: #FFFFFF
-// Light Gray: #F3F4F6
-// Soft Light Blue: #DBEAFE
-// Vibrant Blue: #3B82F6
-// Navy: #1E3A8A
+const BentoCard = ({ children, className = "", delay = 0 }) => (
+    <div
+        className={`bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 ${className}`}
+    >
+        {children}
+    </div>
+)
 
-const exercises = [
-  {
-    id: 1,
-    name: "Push-ups",
-    emoji: "💪",
-    description: "Upper body strength",
-    // Gradient: Navy to Vibrant Blue
-    gradient: "from-[#1E3A8A] to-[#3B82F6]",
-    stats: "89 reps",
-  },
-  {
-    id: 2,
-    name: "Squats",
-    emoji: "🦵",
-    description: "Lower body strength",
-    // Gradient: Vibrant Blue to Soft Blue
-    gradient: "from-[#3B82F6] to-[#60A5FA]",
-    stats: "156 reps",
-  },
+const StatValue = ({ value, label, subtext, color = "text-[#1E3A8A]" }) => (
+    <div>
+        <h3 className={`text-4xl font-black tracking-tight ${color}`}>{value}</h3>
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mt-1">{label}</p>
+        {subtext && <p className="text-xs text-blue-500 font-medium mt-1">{subtext}</p>}
+    </div>
+)
 
-]
+// Custom SVG Wave Chart
+const ActivityChart = () => (
+    <div className="relative h-32 w-full mt-4">
+        <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                </linearGradient>
+            </defs>
+            {/* Background Grid Lines */}
+            <line x1="0" y1="10" x2="100" y2="10" stroke="#F1F5F9" strokeWidth="0.5" />
+            <line x1="0" y1="20" x2="100" y2="20" stroke="#F1F5F9" strokeWidth="0.5" />
+            <line x1="0" y1="30" x2="100" y2="30" stroke="#F1F5F9" strokeWidth="0.5" />
 
-// Counter animation
-const AnimatedCounter = ({ end, duration = 2 }) => {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    let startTime
-    const animate = (timestamp) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / (duration * 1000), 1)
-      setCount(Math.floor(end * progress))
-      if (progress < 1) requestAnimationFrame(animate)
-    }
-    requestAnimationFrame(animate)
-  }, [end, duration])
-
-  return count
-}
-
-export default function Dashboard({ onSelectExercise, onNavigateHome }) {
-  const [activeExercise, setActiveExercise] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState("all")
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  }
-
-  return (
-    // Base Background: Light Gray (#F3F4F6)
-    <div className="min-h-screen bg-[#F3F4F6] text-[#1E3A8A] overflow-hidden font-sans">
-
-
-
-      <div className="relative z-10 p-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div>
-            <motion.h1
-              className="text-6xl font-black bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] bg-clip-text text-transparent mb-2 tracking-tight"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              FitVisor
-            </motion.h1>
-            <motion.p
-              className="text-lg text-slate-500 font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              Your AI-Powered Fitness Form Analyzer
-            </motion.p>
-          </div>
-
-          {/* Header Buttons */}
-          <motion.div
-            className="flex gap-4"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {/* Home Button (New) */}
-            <motion.button
-              onClick={onNavigateHome}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#1E3A8A] shadow-md border border-[#DBEAFE] font-bold hover:shadow-lg transition-all"
-              whileHover={{ scale: 1.05, borderColor: "#3B82F6" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FontAwesomeIcon icon={faHome} className="w-4 h-4" />
-              Home
-            </motion.button>
-
-
-          </motion.div>
-        </motion.div>
-
-        {/* Stats Section */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {[
-            { label: "Current Streak", value: 7, icon: faFire, color: "text-orange-500", suffix: " Days" },
-            { label: "Total Exercises", value: 24, icon: faTrophy, color: "text-[#3B82F6]", suffix: "" },
-            { label: "Accuracy Rate", value: 94, icon: faBullseye, color: "text-[#1E3A8A]", suffix: "%" },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              className="bg-white rounded-2xl shadow-xl shadow-blue-900/5 p-6 border border-[#DBEAFE]"
-              variants={itemVariants}
-              whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.1)" }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-slate-400 font-semibold text-sm uppercase tracking-wider">{stat.label}</p>
-                <div className={`p-3 rounded-full bg-[#F3F4F6] ${stat.color}`}>
-                  <FontAwesomeIcon icon={stat.icon} className="w-5 h-5" />
-                </div>
-              </div>
-              <motion.div
-                className="flex items-baseline"
+            {/* The Wave Line */}
+            <motion.path
+                d="M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15"
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+            />
+            {/* Fill Area */}
+            <motion.path
+                d="M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15 V40 H0 Z"
+                fill="url(#waveGradient)"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-              >
-                <span className="text-5xl font-black text-[#1E3A8A] tracking-tighter">
-                  <AnimatedCounter end={stat.value} />
-                </span>
-                <span className="text-xl font-bold text-[#3B82F6] ml-1">{stat.suffix}</span>
-              </motion.div>
-            </motion.div>
-          ))}
-        </motion.div>
+                transition={{ delay: 0.5, duration: 1.5 }}
+            />
 
-        {/* Category Filter */}
-        {/* <motion.div
-          className="flex gap-3 mb-8 overflow-x-auto pb-4 scrollbar-hide"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          {["all", "strength", "cardio", "core"].map((category) => (
-            <motion.button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-full font-bold whitespace-nowrap transition-all capitalize shadow-sm ${selectedCategory === category
-                ? "bg-[#1E3A8A] text-white shadow-blue-900/20 scale-105"
-                : "bg-white text-slate-400 hover:text-[#3B82F6] hover:bg-[#DBEAFE]"
-                }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {category}
-            </motion.button>
-          ))}
-        </motion.div> */}
-
-        {/* Exercise Grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {exercises.map((exercise) => (
-            <motion.div
-              key={exercise.id}
-              variants={itemVariants}
-              whileHover={{ y: -8 }}
-              onHoverStart={() => setActiveExercise(exercise.id)}
-              onHoverEnd={() => setActiveExercise(null)}
-            >
-              <motion.button
-                onClick={() => onSelectExercise(exercise.name)}
-                className="relative w-full h-full text-left group"
-                whileTap={{ scale: 0.98 }}
-              >
-                {/* Card Container */}
-                <div className="h-full bg-white rounded-3xl p-1 shadow-lg shadow-blue-900/5 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/10">
-                  <div className="relative h-full bg-white rounded-[20px] p-6 overflow-hidden border border-[#F3F4F6] group-hover:border-[#DBEAFE]">
-
-                    {/* Background Gradient on Hover */}
-                    <motion.div
-                      className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${exercise.gradient}`}
-                    />
-
-                    {/* Top Section */}
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-[#F3F4F6] flex items-center justify-center text-4xl shadow-inner group-hover:scale-110 transition-transform duration-300">
-                        {exercise.emoji}
-                      </div>
-                      <div className="w-10 h-10 rounded-full border border-[#F3F4F6] flex items-center justify-center group-hover:bg-[#1E3A8A] group-hover:border-[#1E3A8A] transition-colors duration-300">
-                        <FontAwesomeIcon
-                          icon={faChevronRight}
-                          className="w-3 h-3 text-slate-400 group-hover:text-white"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <h3 className="text-2xl font-black text-[#1E3A8A] mb-1 group-hover:text-[#3B82F6] transition-colors">
-                      {exercise.name}
-                    </h3>
-                    <p className="text-slate-400 font-medium text-sm mb-6">{exercise.description}</p>
-
-                    {/* Stats & Progress */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-end">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Reps</span>
-                        <span className={`text-lg font-bold bg-gradient-to-r ${exercise.gradient} bg-clip-text text-transparent`}>
-                          {exercise.stats}
-                        </span>
-                      </div>
-
-                      {/* Progress Bar Container */}
-                      <div className="h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
-                        <motion.div
-                          className={`h-full bg-gradient-to-r ${exercise.gradient}`}
-                          initial={{ width: "40%" }}
-                          animate={activeExercise === exercise.id ? { width: "100%" } : { width: "60%" }}
-                          transition={{ duration: 0.5, ease: "easeOut" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.button>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Bottom CTA Section */}
-        <motion.div
-          className="relative overflow-hidden rounded-3xl p-1"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] opacity-10 blur-xl" />
-          <div className="relative bg-white/60 backdrop-blur-xl border border-white rounded-[20px] p-10 text-center shadow-xl">
-
-
-            <h2 className="text-3xl font-black text-[#1E3A8A] mb-3">Ready to Perfect Your Form?</h2>
-            <p className="text-slate-500 mb-8 max-w-lg mx-auto">
-              Select an exercise above to launch the AI analyzer. Real-time feedback awaits.
-            </p>
-
-            <motion.button
-              className="inline-flex items-center gap-3 px-8 py-4 bg-[#1E3A8A] text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-900/20 hover:bg-[#3B82F6] transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span>Get Started</span>
-              <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4" />
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
+            {/* Active Points */}
+            {[20, 60, 100].map((cx, i) => (
+                <motion.circle
+                    key={i}
+                    cx={cx}
+                    cy={i === 0 ? 30 : i === 1 ? 10 : 15}
+                    r="2"
+                    fill="#1E3A8A"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 1 + i * 0.2 }}
+                />
+            ))}
+        </svg>
+        {/* Labels x-axis */}
+        <div className="flex justify-between text-[10px] text-slate-300 font-bold mt-2 uppercase">
+            <span>Mon</span><span>Wed</span><span>Fri</span><span>Sun</span>
+        </div>
     </div>
-  )
+)
+
+// Circular Progress
+const ProgressRing = ({ percentage = 94 }) => {
+    const radius = 35
+    const circumference = 2 * Math.PI * radius
+
+    return (
+        <div className="relative w-24 h-24 flex items-center justify-center">
+            <svg className="w-full h-full -rotate-90">
+                <circle cx="50%" cy="50%" r={radius} stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
+                <motion.circle
+                    cx="50%"
+                    cy="50%"
+                    r={radius}
+                    stroke="#1E3A8A"
+                    strokeWidth="8"
+                    fill="transparent"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    initial={{ strokeDashoffset: circumference }}
+                    animate={{ strokeDashoffset: circumference - (percentage / 100) * circumference }}
+                    transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+                <span className="text-xl font-black text-[#1E3A8A]">{percentage}%</span>
+            </div>
+        </div>
+    )
+}
+
+// Data
+const EXERCISES = [
+    { id: 1, name: "Push-ups", category: "strength", reps: 89, color: "text-blue-500", bg: "bg-blue-50" },
+    { id: 2, name: "Squats", category: "strength", reps: 156, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { id: 3, name: "Jumping Jacks", category: "cardio", reps: 102, color: "text-cyan-500", bg: "bg-cyan-50" },
+    { id: 4, name: "Plank", category: "core", reps: "4m", color: "text-emerald-500", bg: "bg-emerald-50" },
+    { id: 5, name: "Lunges", category: "strength", reps: 64, color: "text-violet-500", bg: "bg-violet-50" },
+]
+
+export default function Dashboard({ onSelectExercise, onNavigateProfile, onNavigateHome }) {
+    const [filter, setFilter] = useState("all")
+    const [activeExercise, setActiveExercise] = useState(null) // Local state for exercise monitor
+
+    const filteredExercises = useMemo(() =>
+        filter === "all" ? EXERCISES : EXERCISES.filter(ex => ex.category === filter),
+        [filter])
+
+    // If exercise is active, show the monitor
+    if (activeExercise) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 z-50 fixed inset-0">
+                <h2 className="text-3xl font-black text-[#1E3A8A] mb-4">Exercise Mode</h2>
+                <p className="text-slate-500 mb-8 text-center max-w-md">
+                    The AI Exercise Monitor for <strong>{activeExercise}</strong> is currently being updated.
+                    Check back soon!
+                </p>
+                <button
+                    onClick={() => setActiveExercise(null)}
+                    className="px-6 py-3 bg-[#3B82F6] text-white rounded-xl font-bold hover:bg-blue-600 transition"
+                >
+                    Back to Dashboard
+                </button>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-slate-900 selection:bg-blue-100">
+
+            {/* --- Top Navigation --- */}
+            <header className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-3"
+                >
+                    <div className="w-10 h-10 bg-[#1E3A8A] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
+                        <LayoutGrid size={20} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-[#1E3A8A] tracking-tight">FitVisor<span className="text-blue-500">.</span></h1>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Dashboard</p>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex gap-2"
+                >
+                    <button
+                        onClick={onNavigateHome}
+                        className="p-3 rounded-xl bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-[#1E3A8A] transition-colors"
+                    >
+                        <Home size={20} strokeWidth={2.5} />
+                    </button>
+                    <button
+                        onClick={onNavigateProfile}
+                        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#1E3A8A] text-white font-bold shadow-lg shadow-blue-900/20 hover:bg-blue-700 transition-colors"
+                    >
+                        <User size={18} strokeWidth={2.5} />
+                        <span>Profile</span>
+                    </button>
+                </motion.div>
+            </header>
+
+            {/* --- Bento Grid Layout --- */}
+            <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                {/* 1. Large Activity Chart (Span 8) */}
+                <BentoCard className="md:col-span-8 flex flex-col justify-between overflow-hidden relative group">
+                    <div className="flex justify-between items-start z-10">
+                        <div>
+                            <h2 className="text-xl font-bold text-[#1E3A8A] flex items-center gap-2">
+                                <TrendingUp size={20} className="text-blue-500" />
+                                Weekly Activity
+                            </h2>
+                            <p className="text-slate-400 text-sm mt-1">Movement analysis over last 7 days</p>
+                        </div>
+                        <div className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold flex items-center gap-1">
+                            +12% vs last week
+                        </div>
+                    </div>
+
+                    <ActivityChart />
+
+                    {/* Hover Glow Effect */}
+                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                </BentoCard>
+
+                {/* 2. Streak Card (Span 4) */}
+                <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white relative overflow-hidden" delay={0.1}>
+                    <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                            <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                                <Flame size={24} className="text-orange-300" fill="currentColor" />
+                            </div>
+                            <span className="text-blue-200 font-medium text-sm">On Fire!</span>
+                        </div>
+
+                        <div className="mt-6">
+                            <span className="text-6xl font-black tracking-tighter">7</span>
+                            <span className="text-xl font-bold text-blue-200 ml-2">Day Streak</span>
+                        </div>
+
+                        <div className="mt-4 text-sm text-blue-100 bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
+                            Keep it up! You're in the top 5% this week.
+                        </div>
+                    </div>
+
+                    <div className="absolute inset-0 opacity-10">
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <circle cx="1" cy="1" r="1" fill="white" />
+                            </pattern>
+                            <rect width="100" height="100" fill="url(#grid)" />
+                        </svg>
+                    </div>
+                </BentoCard>
+
+                {/* 3. Accuracy Ring (Span 4) */}
+                <BentoCard className="md:col-span-4 flex items-center justify-between" delay={0.2}>
+                    <div>
+                        <h3 className="text-lg font-bold text-[#1E3A8A]">Avg. Accuracy</h3>
+                        <p className="text-slate-400 text-xs mt-1 max-w-[100px]">Based on your last 20 sessions</p>
+                        <div className="mt-4 flex gap-2">
+                            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-bold">Excellent</span>
+                        </div>
+                    </div>
+                    <ProgressRing percentage={94} />
+                </BentoCard>
+
+                {/* 4. Total Exercises (Span 8) */}
+                <BentoCard className="md:col-span-8 flex items-center justify-between bg-slate-900 text-white overflow-hidden relative" delay={0.3}>
+                    <div className="relative z-10 flex gap-8 items-center">
+                        <div className="p-4 bg-white/10 rounded-2xl">
+                            <Trophy size={32} className="text-yellow-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-4xl font-black">24</h3>
+                            <p className="text-slate-400 font-bold uppercase tracking-wider text-sm">Exercises Mastered</p>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10">
+                        <button className="px-5 py-2 bg-white text-[#1E3A8A] rounded-full font-bold text-sm hover:scale-105 transition-transform">
+                            View All Badges
+                        </button>
+                    </div>
+
+                    {/* Decorative Blob */}
+                    <div className="absolute right-0 top-0 w-64 h-64 bg-blue-600 rounded-full blur-[80px] opacity-20" />
+                </BentoCard>
+
+                {/* 5. Exercise Selector (Full Width) */}
+                <div className="md:col-span-12 mt-8">
+                    <div className="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+                        <div>
+                            <h2 className="text-2xl font-black text-[#1E3A8A]">Ready to Train?</h2>
+                            <p className="text-slate-500">Select a workout to launch the AI Form Analyzer.</p>
+                        </div>
+
+                        {/* Filter Tabs */}
+                        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+                            {["all", "strength", "cardio", "core"].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setFilter(tab)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${filter === tab
+                                        ? "bg-[#1E3A8A] text-white shadow-md"
+                                        : "text-slate-400 hover:text-blue-500"
+                                        }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Exercise Grid */}
+                    <motion.div
+                        layout
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                    >
+                        <AnimatePresence>
+                            {filteredExercises.map((ex) => (
+                                <motion.button
+                                    layout
+                                    key={ex.id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    whileHover={{ y: -5 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setActiveExercise(ex.name)}
+                                    className="group relative bg-white rounded-2xl p-5 text-left border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:border-blue-100 transition-all duration-300"
+                                >
+                                    <div className={`w-12 h-12 rounded-xl ${ex.bg} ${ex.color} flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform`}>
+                                        <Dumbbell size={20} />
+                                    </div>
+
+                                    <h3 className="text-lg font-bold text-slate-800 group-hover:text-[#1E3A8A] transition-colors">{ex.name}</h3>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">{ex.category}</p>
+
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <span className="text-sm font-bold text-slate-900">{ex.reps} <span className="text-slate-400 font-medium text-xs">Total</span></span>
+                                        <div className="w-8 h-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-[#1E3A8A] group-hover:border-[#1E3A8A] transition-colors">
+                                            <ChevronRight size={14} className="text-slate-300 group-hover:text-white" />
+                                        </div>
+                                    </div>
+                                </motion.button>
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+                </div>
+
+            </main>
+        </div>
+    )
 }

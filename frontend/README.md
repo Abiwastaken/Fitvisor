@@ -1,16 +1,127 @@
-# React + Vite
+FitVisor 🏋️‍♂️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FitVisor is an AI-powered fitness web application designed to help users exercise smarter. Using OpenCV and MediaPipe, FitVisor tracks your workouts in real-time, gives posture feedback, and provides personalized recommendations.
 
-Currently, two official plugins are available:
+[FitVisor Banner Image Placeholder]
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+--------------------------------------------------
 
-## React Compiler
+Features:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- AI Exercise Tracking: Track your exercises using your webcam.
+- Posture Correction: Real-time feedback to maintain proper form.
+- Workout Dashboard: Monitor progress, streaks, and achievements.
+- Personalized Workout Plans: Tailored exercise recommendations.
+- Diet Suggestions: BMI-based meal plans (planned feature).
+- Responsive UI: Built with React, Tailwind CSS, and Framer Motion for smooth animations.
+- Social Integration: Share progress with friends (future feature).
 
-## Expanding the ESLint configuration
+--------------------------------------------------
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Project Structure:
+
+fitvisor/
+  backend/                 # Python backend for AI tracking
+  frontend/                # React + Vite frontend
+    src/
+      components/          # Reusable UI components
+      pages/               # Home, AboutUs, WhyUs, ContactUs, Dashboard, etc.
+      App.jsx
+      main.jsx
+  package.json
+  tailwind.config.js
+  README.txt
+
+--------------------------------------------------
+
+Tech Stack:
+
+- Frontend: React (Vite), JSX, Tailwind CSS, Framer Motion, FontAwesome
+- Backend: Python, OpenCV, MediaPipe (for AI-based exercise tracking)
+- Database: Optional (future: SQLite, Firebase, or Supabase)
+
+--------------------------------------------------
+
+Getting Started:
+
+Frontend Setup:
+
+1. Navigate to frontend folder:
+   cd frontend
+
+2. Install dependencies:
+   npm install
+
+3. Run the development server:
+   npm run dev
+
+Backend Setup:
+
+1. Navigate to backend folder:
+   cd backend
+
+2. Install required Python packages:
+   pip install -r requirements.txt
+
+3. Run the backend server:
+   python main.py
+
+--------------------------------------------------
+
+Pages & Components:
+
+- Home.jsx: Hero, Features, Testimonials
+- WhyUs.jsx: AI-powered fitness advantages
+- AboutUs.jsx: Mission, Vision, Team, Tech stack, Timeline
+- ContactUs.jsx: Contact form, map, social icons, FAQ accordion
+- Dashboard.jsx: User stats, workout history, streaks, achievements
+- TrackExercise.jsx: AI exercise tracking with camera feed
+- DietPlan.jsx: Meal suggestions based on BMI
+- Achievements.jsx: Badges and milestones
+- LoginSignup.jsx: Authentication UI
+
+--------------------------------------------------
+
+Color Palette:
+
+- #FFFFFF – White
+- #F3F4F6 – Light Gray
+- #DBEAFE – Soft Light Blue
+- #3B82F6 – Vibrant Blue
+- #1E3A8A – Navy
+
+--------------------------------------------------
+
+Contributing:
+
+We welcome contributions! To contribute:
+
+1. Fork the repository
+2. Create a new branch (git checkout -b feature-name)
+3. Make your changes
+4. Commit (git commit -m "Description of changes")
+5. Push (git push origin feature-name)
+6. Open a Pull Request
+
+--------------------------------------------------
+
+Contact:
+
+- Email: support@fitvisor.com
+- WhatsApp: +977-98XXXXXXXX
+- Instagram / Facebook / LinkedIn: @FitVisor
+
+--------------------------------------------------
+
+License:
+
+This project is licensed under the MIT License.
+
+--------------------------------------------------
+
+Future Improvements:
+
+- Mobile-friendly camera tracking
+- Diet & hydration reminders
+- Wearable device integration
+- Community & leaderboard features
