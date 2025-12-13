@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion"
-import { Menu, X, Dumbbell, TrendingUp, Award, Users, LogOut, Home } from "lucide-react"
+import { Menu, X, Dumbbell, TrendingUp, Award, Users, LogOut, Home, LogIn, Database } from "lucide-react"
 
 // Palette:
 // White: #FFFFFF
@@ -11,14 +11,13 @@ import { Menu, X, Dumbbell, TrendingUp, Award, Users, LogOut, Home } from "lucid
 // Vibrant Blue: #3B82F6
 // Navy: #1E3A8A
 
-// Now accepting activePage and onNavigate props
-const Header = ({ onLogout, activePage, onNavigate }) => {
+const Header = ({ isLoggedIn, onLogout, activePage, onNavigate, currentUser }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
 
   const { scrollY } = useScroll()
 
-  // Intelligent Hiding (Keep this! It's nice UI)
+  // Intelligent Hiding
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious()
     if (latest > previous && latest > 150) {
@@ -29,16 +28,22 @@ const Header = ({ onLogout, activePage, onNavigate }) => {
     }
   })
 
-  // IDs here must match the strings used in App.js state
+  // Navigation Items
   const navItems = [
     { name: "Home", id: "home", icon: Home },
     { name: "Dashboard", id: "dashboard", icon: TrendingUp },
+    { name: "Leaderboard", id: "leaderboard", icon: Award },
+    { name: "Profile", id: "profile", icon: Users },
   ]
 
+  if (currentUser?.email === "admin@gmail.com") {
+    navItems.push({ name: "Data View", id: "admin", icon: Database })
+  }
+
   const handleNavigation = (pageId) => {
-    onNavigate(pageId) // Tell App.js to switch pages
-    setIsOpen(false)   // Close mobile menu
-    window.scrollTo({ top: 0, behavior: 'smooth' }) // Optional: Scroll to top on page change
+    onNavigate(pageId)
+    setIsOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -103,16 +108,28 @@ const Header = ({ onLogout, activePage, onNavigate }) => {
             {/* Separator */}
             <div className="hidden md:block w-px h-6 bg-[#DBEAFE] mx-2" />
 
-            {/* Logout Button */}
-            <motion.button
-              onClick={onLogout}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-[#F3F4F6] text-[#1E3A8A] hover:bg-red-50 hover:text-red-500 transition-colors"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </motion.button>
+            {/* Login / Logout Button (Desktop) */}
+            {isLoggedIn ? (
+              <motion.button
+                onClick={onLogout}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-[#F3F4F6] text-[#1E3A8A] hover:bg-red-50 hover:text-red-500 transition-colors"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={() => handleNavigation("login")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-[#3B82F6] text-white hover:bg-[#1E3A8A] transition-colors shadow-sm"
+                title="Login"
+              >
+                <LogIn size={18} />
+              </motion.button>
+            )}
 
             {/* Mobile Hamburger */}
             <motion.button
@@ -142,8 +159,8 @@ const Header = ({ onLogout, activePage, onNavigate }) => {
                         key={item.id}
                         onClick={() => handleNavigation(item.id)}
                         className={`flex items-center gap-3 w-full p-3 rounded-xl text-left transition-all ${isActive
-                            ? "bg-[#DBEAFE] text-[#1E3A8A] font-semibold"
-                            : "text-slate-500 hover:bg-[#F3F4F6] hover:text-[#3B82F6]"
+                          ? "bg-[#DBEAFE] text-[#1E3A8A] font-semibold"
+                          : "text-slate-500 hover:bg-[#F3F4F6] hover:text-[#3B82F6]"
                           }`}
                       >
                         <div className={`p-2 rounded-lg ${isActive ? "bg-white/50" : "bg-[#F3F4F6]"}`}>
@@ -156,15 +173,28 @@ const Header = ({ onLogout, activePage, onNavigate }) => {
 
                   <div className="h-px bg-[#F3F4F6] my-1" />
 
-                  <button
-                    onClick={onLogout}
-                    className="flex items-center gap-3 w-full p-3 rounded-xl text-left text-red-500 hover:bg-red-50 font-medium"
-                  >
-                    <div className="p-2 rounded-lg bg-red-50">
-                      <LogOut size={18} />
-                    </div>
-                    Logout
-                  </button>
+                  {/* Login / Logout Button (Mobile) */}
+                  {isLoggedIn ? (
+                    <button
+                      onClick={onLogout}
+                      className="flex items-center gap-3 w-full p-3 rounded-xl text-left text-red-500 hover:bg-red-50 font-medium"
+                    >
+                      <div className="p-2 rounded-lg bg-red-50">
+                        <LogOut size={18} />
+                      </div>
+                      Logout
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleNavigation("login")}
+                      className="flex items-center gap-3 w-full p-3 rounded-xl text-left text-[#3B82F6] hover:bg-blue-50 font-medium"
+                    >
+                      <div className="p-2 rounded-lg bg-blue-50">
+                        <LogIn size={18} />
+                      </div>
+                      Login
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
