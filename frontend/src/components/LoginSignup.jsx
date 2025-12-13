@@ -3,17 +3,9 @@ import { motion } from "framer-motion"
 
 const LoginSignup = ({ onLoginSuccess }) => {
   // State Management
-  const [isSignUpMode, setIsSignUpMode] = useState(false)
-  const [isForgotMode, setIsForgotMode] = useState(false)
-
-  // Verification State
-  const [isVerifyMode, setIsVerifyMode] = useState(false) // New: Shows OTP verification screen
-  const [verificationCode, setVerificationCode] = useState("")
-
-  // Reset Password State
-  const [isResetMode, setIsResetMode] = useState(false) // New: Shows Code + New Pass inputs
-  const [resetCode, setResetCode] = useState("")
-  const [newPassword, setNewPassword] = useState("")
+  const [isSignUpMode, setIsSignUpMode] = useState(false) // Toggles Overlay
+  const [isForgotMode, setIsForgotMode] = useState(false) // Toggles between SignUp form and Forgot form on the right
+  const [isUpdatePasswordMode, setIsUpdatePasswordMode] = useState(false) // Shows the final "New Password" form
 
   // Inputs
   const [signInEmail, setSignInEmail] = useState("")
@@ -21,15 +13,14 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
   const [signUpName, setSignUpName] = useState("")
   const [signUpEmail, setSignUpEmail] = useState("")
-  const [signUpAge, setSignUpAge] = useState("")
-  const [signUpHeight, setSignUpHeight] = useState("")
-  const [signUpWeight, setSignUpWeight] = useState("")
   const [signUpPassword, setSignUpPassword] = useState("")
-  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("")
 
   const [forgotEmail, setForgotEmail] = useState("")
+  const [newPassword, setNewPassword] = useState("")
 
-  // 🔹 AUTH HANDLERS
+  // ============================
+  // 🔹 AUTH HANDLERS (REAL API)
+  // ============================
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
@@ -38,25 +29,22 @@ const LoginSignup = ({ onLoginSuccess }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: signInEmail, password: signInPassword }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        if (onLoginSuccess) onLoginSuccess(data.user);
+        if (onLoginSuccess) onLoginSuccess(data.user); // You might want to pass user data here
       } else {
         alert(data.error || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("An error occurred.");
+      alert("An error occurred during login.");
     }
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    if (signUpPassword !== signUpConfirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
     try {
       const response = await fetch("http://localhost:5000/api/signup", {
         method: "POST",
@@ -65,137 +53,64 @@ const LoginSignup = ({ onLoginSuccess }) => {
           name: signUpName,
           email: signUpEmail,
           password: signUpPassword,
-          age: signUpAge,
-          height: signUpHeight,
-          weight: signUpWeight
         }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        alert("Signup successful! Please check your email for the verification code.");
-        setIsVerifyMode(true); // Switch to Verify Mode
+        alert("Signup successful! You can now log in.");
+        setIsSignUpMode(false);
       } else {
         alert(data.error || "Signup failed");
       }
     } catch (error) {
       console.error("Signup error:", error);
-      alert("An error occurred.");
-    }
-  };
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:5000/api/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: signUpEmail, code: verificationCode }), // Using signUpEmail as context
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Email verified! Please sign in.");
-        setIsVerifyMode(false);
-        setIsSignUpMode(false);
-      } else {
-        alert(data.error || "Verification failed");
-      }
-    } catch (error) {
-      console.error("Verify error:", error);
-      alert("An error occurred.");
+      alert("An error occurred during signup.");
     }
   };
 
   const handleForgotPassword = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Reset code sent to your email.");
-        setIsResetMode(true); // Switch to Reset Mode
-      } else {
-        alert(data.error || "Request failed");
-      }
-    } catch (error) {
-      console.error("Forgot Pass error:", error);
-      alert("An error occurred.");
-    }
+    // MOCK - Backend for this not yet implemented
+    setTimeout(() => {
+      alert("Password reset link sent to your email. (Mocked)");
+      setIsSignUpMode(false);
+      setIsForgotMode(false);
+    }, 500);
   };
 
-  const handleResetPassword = async (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:5000/api/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, code: resetCode, newPassword: newPassword }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Password updated! Please sign in.");
-        setIsResetMode(false);
-        setIsForgotMode(false);
-      } else {
-        alert(data.error || "Reset failed");
-      }
-    } catch (error) {
-      console.error("Reset Pass error:", error);
-      alert("An error occurred.");
-    }
+    // MOCK - Backend for this not yet implemented
+    setTimeout(() => {
+      alert("Password updated successfully! (Mocked) You can now log in.");
+      setIsUpdatePasswordMode(false);
+      setIsSignUpMode(false);
+      setIsForgotMode(false);
+    }, 500);
   };
 
+  // Logic to determine if Overlay is "Active" (Slid to the left)
   const isOverlayLeft = isSignUpMode || isForgotMode
 
   return (
+    // REMOVED THE OUTER DIV WRAPPER HERE. 
+    // This component now creates just the card, which fills the width of the parent in App.js
     <motion.div
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
+      // CHANGED: Removed max-w constraints here so it follows App.js constraints.
+      // CHANGED: Uses w-full to fill the parent container.
       className="bg-[#FFFFFF] rounded-3xl shadow-2xl relative overflow-hidden w-full min-h-[600px] md:min-h-[500px]"
     >
-      {/* ================= VERIFICATION MODAL ================= */}
-      {isVerifyMode && (
-        <div className="absolute inset-0 z-50 bg-white flex flex-col justify-center items-center p-10">
-          <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Verify Email</h1>
-          <p className="text-sm text-gray-500 mb-6">Enter the code sent to {signUpEmail}</p>
-          <form onSubmit={handleVerify} className="w-full max-w-sm flex flex-col items-center">
-            <input
-              type="text"
-              placeholder="6-Digit Code"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-              required
-              className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-center tracking-[1em] font-bold text-lg outline-none focus:ring-2 focus:ring-[#3B82F6]"
-            />
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-[#3B82F6] text-white text-xs py-3 px-11 rounded-lg font-semibold uppercase mt-4 shadow-md"
-            >
-              Verify Account
-            </motion.button>
-          </form>
-        </div>
-      )}
 
-      {/* ================= RESET PASSWORD MODAL ================= */}
-      {isResetMode && (
+      {/* ================= UPDATE PASSWORD FORM (Overlay Modal) ================= */}
+      {isUpdatePasswordMode && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col justify-center items-center p-10">
-          <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Reset Password</h1>
-          <p className="text-sm text-gray-500 mb-6">Enter the code from your email and new password.</p>
-          <form onSubmit={handleResetPassword} className="w-full max-w-sm flex flex-col items-center">
-            <input
-              type="text"
-              placeholder="6-Digit Code"
-              value={resetCode}
-              onChange={(e) => setResetCode(e.target.value)}
-              required
-              className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
-            />
+          <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Set New Password</h1>
+          <p className="text-sm text-gray-500 mb-6">Enter your new password below.</p>
+          <form onSubmit={handleUpdatePassword} className="w-full max-w-sm flex flex-col items-center">
             <input
               type="password"
               placeholder="New Password"
@@ -212,13 +127,6 @@ const LoginSignup = ({ onLoginSuccess }) => {
             >
               Update Password
             </motion.button>
-            <button
-              onClick={() => setIsResetMode(false)}
-              type="button"
-              className="text-[#1E3A8A] text-xs mt-4 hover:underline"
-            >
-              Cancel
-            </button>
           </form>
         </div>
       )}
@@ -319,7 +227,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
               whileTap={{ scale: 0.95 }}
               className="bg-[#3B82F6] text-white text-xs py-3 px-11 rounded-lg font-semibold uppercase mt-4 shadow-md"
             >
-              Send Reset Code
+              Send Reset Link
             </motion.button>
 
             <button
@@ -331,8 +239,8 @@ const LoginSignup = ({ onLoginSuccess }) => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSignUp} className="bg-white flex items-center justify-center flex-col h-full px-8 md:px-10 text-center overflow-y-auto">
-            <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A] mt-8">Create Account</h1>
+          <form onSubmit={handleSignUp} className="bg-white flex items-center justify-center flex-col h-full px-8 md:px-10 text-center">
+            <h1 className="text-3xl font-bold mb-4 text-[#1E3A8A]">Create Account</h1>
             <span className="text-xs mb-2 text-gray-500">Use your email to register</span>
 
             <input
@@ -353,33 +261,6 @@ const LoginSignup = ({ onLoginSuccess }) => {
               className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
             />
 
-            <div className="flex gap-2 w-full">
-              <input
-                type="number"
-                placeholder="Age"
-                value={signUpAge}
-                onChange={(e) => setSignUpAge(e.target.value)}
-                required
-                className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
-              />
-              <input
-                type="number"
-                placeholder="Height (cm)"
-                value={signUpHeight}
-                onChange={(e) => setSignUpHeight(e.target.value)}
-                required
-                className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
-              />
-              <input
-                type="number"
-                placeholder="Weight (kg)"
-                value={signUpWeight}
-                onChange={(e) => setSignUpWeight(e.target.value)}
-                required
-                className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
-              />
-            </div>
-
             <input
               type="password"
               placeholder="Password"
@@ -389,20 +270,11 @@ const LoginSignup = ({ onLoginSuccess }) => {
               className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
             />
 
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={signUpConfirmPassword}
-              onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-              required
-              className="bg-[#F3F4F6] my-2 p-3 rounded-lg w-full text-sm outline-none focus:ring-2 focus:ring-[#3B82F6]"
-            />
-
             <motion.button
               type="submit"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-[#3B82F6] text-white text-xs py-3 px-11 rounded-lg font-semibold uppercase mt-3 shadow-md mb-8"
+              className="bg-[#3B82F6] text-white text-xs py-3 px-11 rounded-lg font-semibold uppercase mt-3 shadow-md"
             >
               Sign Up
             </motion.button>
