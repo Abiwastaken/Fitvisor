@@ -8,7 +8,7 @@ import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { POSE_CONNECTIONS } from '@mediapipe/pose';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:8000';
 
 const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
     const videoRef = useRef(null);
@@ -138,14 +138,25 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                 0: "nose"
             };
 
-            for (const [idx, name] of Object.entries(landmarkNames)) {
-                if (landmarks[idx]) {
-                    normalizedLandmarks[name] = {
-                        x: landmarks[idx].x - hipCenterX,
-                        y: landmarks[idx].y - hipCenterY,
-                        z: landmarks[idx].z - hipCenterZ,
-                        visibility: landmarks[idx].visibility
+            // Send all 33 landmarks
+            for (let i = 0; i < 33; i++) {
+                if (landmarks[i]) {
+                    // Use index as key if name not available or just send array
+                    // But backend expects map? Let's check backend. 
+                    // Backend uses names currently. But for model inputs 0-32 indices are better.
+                    // We will send both map (for named access) and list (for model).
+                    // Actually, let's just stick to the map but include all keys 0-32.
+                    normalizedLandmarks[i] = {
+                        x: landmarks[i].x - hipCenterX,
+                        y: landmarks[i].y - hipCenterY,
+                        z: landmarks[i].z - hipCenterZ,
+                        visibility: landmarks[i].visibility
                     };
+
+                    // Also keep named ones for heuristic compatibility
+                    if (landmarkNames[i]) {
+                        normalizedLandmarks[landmarkNames[i]] = normalizedLandmarks[i];
+                    }
                 }
             }
 
@@ -161,9 +172,9 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                 // Draw skeleton
                 if (results.poseLandmarks) {
                     drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
-                        { color: '#00FF00', lineWidth: 4 });
+                        { color: '#3B82F6', lineWidth: 4 }); // Blue connectors
                     drawLandmarks(canvasCtx, results.poseLandmarks,
-                        { color: '#FF0000', lineWidth: 2 });
+                        { color: '#FFFFFF', lineWidth: 2, radius: 4 }); // White landmarks
                 }
                 canvasCtx.restore();
             }
@@ -205,6 +216,12 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
     const handleStart = () => {
         if (socket && socket.connected) {
             socket.emit('start_exercise');
+        }
+    };
+
+    const handleStop = () => {
+        if (socket && socket.connected) {
+            socket.emit('stop_exercise');
         }
     };
 
@@ -265,7 +282,7 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
         formData.append('reps', stats.reps);
 
         try {
-            const response = await fetch('http://localhost:5000/api/upload-video', {
+            const response = await fetch('http://localhost:8000/api/upload-video', {
                 method: 'POST',
                 body: formData,
             });
@@ -345,7 +362,7 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                 {/* Touchless Mode Overlay (When NOT Active) */}
                 {/* Control Overlay */}
                 <AnimatePresence>
-                    {(!stats.isActive || gestureProgress > 0) && !showCongrats && (
+                    {!stats.isActive && !showCongrats && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -363,10 +380,6 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                                         <p className="text-slate-400 text-sm mb-2">
                                             Make sure your full body is visible.
                                         </p>
-                                        <div className="flex items-center gap-2 justify-center text-xs text-blue-300 bg-blue-500/10 py-1 px-3 rounded-full border border-blue-500/20">
-                                            <Hand size={14} />
-                                            <span>Show Palm for 5s to Finish</span>
-                                        </div>
                                     </div>
 
                                     <button
@@ -376,42 +389,28 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                                         START SESSION
                                     </button>
                                 </div>
-                            ) : (
-                                /* STOPPING FEEDBACK (Only visible if gestureProgress > 0 due to outer condition) */
-                                <div className="bg-slate-900/80 p-8 rounded-3xl border border-blue-500/30 flex flex-col items-center gap-5 max-w-sm text-center shadow-2xl shadow-blue-500/10">
+                            ) : null}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                                    {/* Circular Progress Ring */}
-                                    <div className="relative w-32 h-32 flex items-center justify-center">
-                                        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 100 100">
-                                            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(59, 130, 246, 0.2)" strokeWidth="6" />
-                                            <circle
-                                                cx="50" cy="50" r="42" fill="none"
-                                                stroke={gestureProgress >= 100 ? "#22c55e" : "#3b82f6"}
-                                                strokeWidth="6" strokeLinecap="round"
-                                                strokeDasharray={`${2 * Math.PI * 42}`}
-                                                strokeDashoffset={`${2 * Math.PI * 42 * (1 - gestureProgress / 100)}`}
-                                                style={{ transition: 'stroke-dashoffset 0.3s ease-out, stroke 0.3s ease' }}
-                                            />
-                                        </svg>
-                                        <motion.div
-                                            className={`p-5 rounded-full ${gestureProgress > 0 ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}
-                                            animate={{ scale: gestureProgress > 0 ? [1, 1.05, 1] : 1 }}
-                                            transition={{ repeat: Infinity, duration: 1 }}
-                                        >
-                                            {gestureProgress > 0 && gestureProgress < 100 ? (
-                                                <span className="text-4xl font-black text-white">{Math.ceil(5 - (gestureProgress / 20))}</span>
-                                            ) : (
-                                                <Hand size={40} className="text-blue-400" />
-                                            )}
-                                        </motion.div>
-                                    </div>
-
-                                    <h3 className="text-2xl font-bold text-white">Ending Session...</h3>
-                                    <p className="text-slate-300">
-                                        Hold palm steady to finish.
-                                    </p>
-                                </div>
-                            )}
+                {/* Finish Button (Visible when Active) */}
+                <AnimatePresence>
+                    {stats.isActive && !showCongrats && (
+                        <motion.div
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 50, opacity: 0 }}
+                            className="absolute bottom-8 right-8 z-30"
+                        >
+                            <button
+                                onClick={handleStop}
+                                className="px-6 py-3 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold shadow-xl overflow-hidden relative group flex items-center gap-2"
+                            >
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+                                <div className="w-3 h-3 rounded-sm bg-white" />
+                                <span>FINISH</span>
+                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -476,9 +475,40 @@ const ExerciseMonitor = ({ exerciseType, userId, onBack }) => {
                                 <CheckCircle size={40} className="text-white" />
                             </div>
                             <h2 className="text-3xl font-black text-white mb-2">Session Complete!</h2>
-                            <p className="text-slate-400 mb-8">
-                                You crushed <span className="text-white font-bold">{stats.reps}</span> reps! Video recorded.
+                            <p className="text-slate-400 mb-6">
+                                You crushed <span className="text-white font-bold">{stats.reps}</span> reps!
                             </p>
+
+                            {/* Report Section */}
+                            {stats.report && (
+                                <div className="bg-slate-800/50 rounded-xl p-4 mb-6 text-left border border-slate-700">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-slate-400 text-sm font-bold uppercase">Form Score</span>
+                                        <span className={`text-xl font-black ${stats.report.score >= 80 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            {stats.report.score}%
+                                        </span>
+                                    </div>
+
+                                    {stats.report.mistakes && stats.report.mistakes.length > 0 ? (
+                                        <div>
+                                            <p className="text-slate-400 text-xs font-bold uppercase mb-2">Areas for Improvement</p>
+                                            <ul className="space-y-2">
+                                                {stats.report.mistakes.map((mistake, idx) => (
+                                                    <li key={idx} className="text-red-300 text-sm flex items-start gap-2">
+                                                        <span className="mt-1">⚠️</span>
+                                                        {mistake}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ) : (
+                                        <div className="text-green-400 text-sm flex items-center gap-2">
+                                            <CheckCircle size={16} />
+                                            <span>Perfect form detected!</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {isUploading && (
                                 <div className="mb-6">

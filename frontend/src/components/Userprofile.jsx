@@ -64,7 +64,7 @@ export default function UserProfile({ userData, onBack, onUpdateUser }) {
   })
 
   // Mock Stats Data
-  const streakDays = 7
+  const streakDays = userData?.streak || 0
   const totalExercises = 24
   const accuracyRate = 94
   const exerciseHistory = [
@@ -82,7 +82,7 @@ export default function UserProfile({ userData, onBack, onUpdateUser }) {
 
   const handleSave = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/profile", {
+      const response = await fetch("http://localhost:8000/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
@@ -251,7 +251,14 @@ export default function UserProfile({ userData, onBack, onUpdateUser }) {
                 animate="visible"
               >
                 {[
-                  { icon: faFire, label: "Current Streak", value: streakDays, unit: "Days", color: "text-orange-500", bg: "bg-orange-50" },
+                  {
+                    icon: faFire,
+                    label: streakDays > 0 ? "Current Streak" : "Start Streak",
+                    value: streakDays,
+                    unit: "Days",
+                    color: streakDays > 0 ? "text-orange-500" : "text-slate-400",
+                    bg: streakDays > 0 ? "bg-orange-50" : "bg-slate-100"
+                  },
                   { icon: faTrophy, label: "Total Exercises", value: totalExercises, unit: "Done", color: "text-[#3B82F6]", bg: "bg-blue-50" },
                   { icon: faChartLine, label: "Avg. Accuracy", value: accuracyRate, unit: "%", color: "text-[#1E3A8A]", bg: "bg-indigo-50" },
                 ].map((stat, index) => (

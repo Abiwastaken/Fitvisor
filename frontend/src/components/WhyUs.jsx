@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Camera, 
-  Activity, 
-  ClipboardList, 
-  TrendingUp, 
-  Smartphone, 
+import {
+  Camera,
+  Activity,
+  ClipboardList,
+  TrendingUp,
+  Smartphone,
   ScanLine,
   Sparkles,
   Dumbbell,
@@ -67,8 +67,8 @@ const containerVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 50 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { type: "spring", stiffness: 50, damping: 20 }
   },
@@ -77,52 +77,33 @@ const cardVariants = {
 // --- API Helper ---
 
 const generateGeminiContent = async (prompt, systemPrompt) => {
-  // --- UPDATING API KEY HERE ---
-  const apiKey = "AIzaSyCywkovOcFwJIk2kcQrmfCrovtPFGbRvrI"; // Updated with user's key
-  // -----------------------------
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+  try {
+    const response = await fetch("http://localhost:8000/api/ask-ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, system_prompt: systemPrompt }),
+    })
 
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    systemInstruction: { parts: [{ text: systemPrompt }] }
-  };
-  
-  // Implemented basic exponential backoff
-  const maxRetries = 3;
-  let delay = 1000;
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-  
-      if (!response.ok) {
-        if (response.status === 429 && i < maxRetries - 1) {
-          // Retry on 429 (Too Many Requests)
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2; // Exponential backoff
-          continue;
-        }
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      const data = await response.json()
+      if (response.status === 429) {
+        return "⚠️ AI quota temporarily exceeded. This feature will be available again soon. Please try a simpler request or check back later."
       }
-  
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate that right now.";
-
-    } catch (error) {
-      if (i === maxRetries - 1) {
-        console.error("Gemini API call failed after all retries:", error);
-        return "Unable to connect to the AI Coach. Please try again later.";
-      }
-      // Log for network/other transient errors and retry
-      await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2;
+      throw new Error(data.error || `Server Error: ${response.status}`)
     }
+
+    const data = await response.json()
+    // Backend returns { result: "..." } or { error: "..." }
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    return data.result || "No response received."
+
+  } catch (error) {
+    console.error("AI Request Failed:", error)
+    return "Unable to connect to the AI Coach. Please try again later."
   }
-};
+}
 
 // --- Main Component ---
 
@@ -141,10 +122,10 @@ const WhyUs = () => {
     if (!workoutInput.trim()) return;
     setIsWorkoutLoading(true);
     setWorkoutResult('');
-    
+
     const systemPrompt = "You are an expert fitness coach. Create a concise, high-intensity workout routine based on the user's available time and equipment. Use bullet points. Keep it under 150 words. Be encouraging.";
     const result = await generateGeminiContent(`Create a workout for: ${workoutInput}`, systemPrompt);
-    
+
     setWorkoutResult(result);
     setIsWorkoutLoading(false);
   };
@@ -164,10 +145,10 @@ const WhyUs = () => {
   return (
     <section className="py-20 px-4 md:px-8 bg-[#F3F4F6] overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        
+
         {/* Header Section */}
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -176,8 +157,8 @@ const WhyUs = () => {
           >
             Why Choose FitVisor?
           </motion.h2>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -190,7 +171,7 @@ const WhyUs = () => {
         </div>
 
         {/* Cards Grid */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -201,7 +182,7 @@ const WhyUs = () => {
             <motion.div
               key={feature.id}
               variants={cardVariants}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.05,
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
               }}
@@ -236,7 +217,7 @@ const WhyUs = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            
+
             {/* Feature 1: AI Workout Architect */}
             <div className="bg-[#F3F4F6] rounded-2xl p-6 md:p-8 border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
@@ -249,14 +230,14 @@ const WhyUs = () => {
                 Tell us your available time and equipment (e.g., "15 mins, no equipment").
               </p>
               <div className="flex flex-col gap-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={workoutInput}
                   onChange={(e) => setWorkoutInput(e.target.value)}
                   placeholder="E.g., 30 mins, dumbbell only, focus on abs"
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-all"
                 />
-                <button 
+                <button
                   onClick={handleWorkoutGen}
                   disabled={isWorkoutLoading}
                   className="w-full bg-[#1E3A8A] text-white font-semibold py-3 rounded-xl hover:bg-[#3B82F6] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
@@ -272,7 +253,7 @@ const WhyUs = () => {
                   ) : 'Generate Routine ✨'}
                 </button>
               </div>
-              
+
               {/* Output Area */}
               <div className="mt-6 min-h-[150px] bg-white rounded-xl p-4 border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap">
                 {workoutResult || (
@@ -295,14 +276,14 @@ const WhyUs = () => {
                 Ask a quick question about diet, pre-workout meals, or hydration.
               </p>
               <div className="flex flex-col gap-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={nutritionInput}
                   onChange={(e) => setNutritionInput(e.target.value)}
                   placeholder="E.g., What should I eat before a run?"
                   className="w-full px-4 py-3 rounded-xl border border-[#3B82F6]/30 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition-all bg-white"
                 />
-                <button 
+                <button
                   onClick={handleNutritionGen}
                   disabled={isNutritionLoading}
                   className="w-full bg-[#3B82F6] text-white font-semibold py-3 rounded-xl hover:bg-[#1E3A8A] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
@@ -319,8 +300,8 @@ const WhyUs = () => {
                 </button>
               </div>
 
-               {/* Output Area */}
-               <div className="mt-6 min-h-[150px] bg-white/60 rounded-xl p-4 border border-[#3B82F6]/20 text-sm text-[#1E3A8A] whitespace-pre-wrap">
+              {/* Output Area */}
+              <div className="mt-6 min-h-[150px] bg-white/60 rounded-xl p-4 border border-[#3B82F6]/20 text-sm text-[#1E3A8A] whitespace-pre-wrap">
                 {nutritionResult || (
                   <span className="text-[#1E3A8A]/50 italic">
                     Expert nutrition insights will appear here...

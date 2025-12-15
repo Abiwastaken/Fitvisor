@@ -11,3 +11,4 @@ eventlet
 # New Dependencies
 sendgrid
 certifi
+tensorflow

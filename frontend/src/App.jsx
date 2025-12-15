@@ -57,7 +57,7 @@ function App() {
 
   const handleLoginSuccess = (userData) => {
     // Check if user is NOT admin and has NOT accepted terms
-    if (userData.email !== "admin@gmail.com" && userData.email !== "hridayamdr2007@gmail.com" && !userData.acceptedTerms) {
+    if (userData.email !== "hridayamdr2007@gmail.com" && !userData.acceptedTerms) {
       setIsLoggedIn(true)
       setCurrentUser(userData)
       setLoginMessage("Please accept the terms to proceed.")
@@ -76,7 +76,7 @@ function App() {
     if (!currentUser || !currentUser.email) return
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/accept-terms', {
+      const response = await fetch('http://127.0.0.1:8000/api/accept-terms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: currentUser.email }),
@@ -141,7 +141,7 @@ function App() {
               initial="initial" animate="in" exit="out"
               variants={pageVariants} transition={pageTransition}
             >
-              <Hero onStart={() => handleNavigation('dashboard')} />
+              <Hero onStart={() => handleNavigation('dashboard')} onLogin={() => handleNavigation('login')} />
               <WhyUs />
               <AboutUs />
               <ContactUs />
@@ -262,7 +262,7 @@ function App() {
           )}
 
           {/* --- ADMIN PAGE --- */}
-          {currentPage === "admin" && (currentUser?.email === "admin@gmail.com" || currentUser?.email === "hridayamdr2007@gmail.com") && (
+          {currentPage === "admin" && (currentUser?.email === "hridayamdr2007@gmail.com") && (
             <motion.div key="admin" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
               <AdminUsers onBack={() => handleNavigation('dashboard')} />
             </motion.div>

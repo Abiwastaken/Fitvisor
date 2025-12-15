@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect,useState, useRef } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Trophy,
@@ -252,7 +252,7 @@ const Leaderboard = ({ currentUser }) => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/leaderboard')
+        const response = await fetch('http://localhost:8000/api/leaderboard')
         if (!response.ok) {
           throw new Error('Failed to fetch leaderboard data')
         }

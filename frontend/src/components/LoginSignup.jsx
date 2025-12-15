@@ -33,7 +33,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: signInEmail, password: signInPassword }),
@@ -58,7 +58,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/signup", {
+      const response = await fetch("http://localhost:8000/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -86,7 +86,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
   const handleVerify = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/verify-email", {
+      const response = await fetch("http://localhost:8000/api/verify-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: signUpEmail, code: verificationCode }), // Using signUpEmail as context
@@ -107,7 +107,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
 
   const handleForgotPassword = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/forgot-password", {
+      const response = await fetch("http://localhost:8000/api/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -128,7 +128,7 @@ const LoginSignup = ({ onLoginSuccess }) => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/reset-password", {
+      const response = await fetch("http://localhost:8000/api/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, code: resetCode, newPassword: newPassword }),

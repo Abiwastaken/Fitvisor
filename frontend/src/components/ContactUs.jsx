@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaInstagram, 
-  FaFacebook, 
-  FaLinkedin, 
-  FaWhatsapp, 
-  FaEnvelope, 
+import {
+  FaInstagram,
+  FaFacebook,
+  FaLinkedin,
+  FaWhatsapp,
+  FaEnvelope,
   FaPaperPlane,
   FaChevronDown,
-  FaChevronUp, 
-  FaUser,  
-  FaCheckCircle 
+  FaChevronUp,
+  FaUser,
+  FaCheckCircle
 } from 'react-icons/fa';
 
 const ContactUs = () => {
@@ -23,11 +23,36 @@ const ContactUs = () => {
   };
 
   // --- Handle Form Submission ---
-  const handleSubmit = (e) => {
+  // --- Handle Form Submission ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormStatus('submitting');
-    // Simulate network request
-    setTimeout(() => setFormStatus('success'), 1500);
+
+    // Extract form data
+    const formData = {
+      name: e.target[0].value,
+      email: e.target[1].value,
+      message: e.target[2].value
+    };
+
+    try {
+      const response = await fetch('http://localhost:8000/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        setFormStatus('success');
+      } else {
+        alert("Failed to send message. Please try again.");
+        setFormStatus('idle');
+      }
+    } catch (error) {
+      console.error("Contact error:", error);
+      alert("Error sending message.");
+      setFormStatus('idle');
+    }
   };
 
   // --- Data ---
@@ -63,10 +88,10 @@ const ContactUs = () => {
 
   return (
     <div className="bg-white min-h-screen font-sans overflow-x-hidden text-gray-800">
-      
+
       {/* ================= HEADER SECTION ================= */}
       <section className="relative py-20 px-6 text-center bg-[#F3F4F6]">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -80,21 +105,21 @@ const ContactUs = () => {
           </p>
           <div className="w-20 h-1 bg-[#3B82F6] mx-auto mt-6 rounded-full"></div>
         </motion.div>
-        
+
         {/* Decorative Background Blob */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#DBEAFE] rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
       </section>
 
       {/* ================= MAIN CONTENT GRID ================= */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 lg:grid-cols-2 gap-12"
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
-          
+
           {/* --- LEFT COLUMN: DARK GLASS FORM --- */}
           <motion.div
             variants={{
@@ -108,7 +133,7 @@ const ContactUs = () => {
 
             {/* 2. Inner Card Content */}
             <div className="bg-[#0F172A] relative rounded-[22px] p-8 h-full overflow-hidden">
-              
+
               {/* Background Decorations */}
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -133,7 +158,7 @@ const ContactUs = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center justify-center h-[300px] text-center"
                 >
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 10 }}
@@ -156,7 +181,7 @@ const ContactUs = () => {
                 /* FORM INPUTS */
                 <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
+
                     {/* Name Input */}
                     <div className="relative group/input">
                       <label className="text-blue-200/60 text-xs uppercase font-bold tracking-wider mb-2 block">Name</label>
@@ -184,7 +209,7 @@ const ContactUs = () => {
                           placeholder="john@example.com"
                           className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[#1E293B] border border-blue-900/30 text-white placeholder-blue-200/20 focus:outline-none focus:bg-[#1E293B] transition-all"
                         />
-                         <div className="absolute inset-0 rounded-xl ring-1 ring-blue-500/0 group-focus-within/input:ring-blue-500/50 transition-all duration-300 pointer-events-none shadow-[0_0_0_0_rgba(59,130,246,0)] group-focus-within/input:shadow-[0_0_15px_rgba(59,130,246,0.2)]"></div>
+                        <div className="absolute inset-0 rounded-xl ring-1 ring-blue-500/0 group-focus-within/input:ring-blue-500/50 transition-all duration-300 pointer-events-none shadow-[0_0_0_0_rgba(59,130,246,0)] group-focus-within/input:shadow-[0_0_15px_rgba(59,130,246,0.2)]"></div>
                       </div>
                     </div>
                   </div>
@@ -222,7 +247,7 @@ const ContactUs = () => {
 
           {/* --- RIGHT COLUMN: INFO, MAP, SOCIALS --- */}
           <div className="flex flex-col gap-8">
-            
+
             {/* Info Cards */}
             <motion.div variants={fadeInUp} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-[#DBEAFE] p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:shadow-md transition-shadow">
@@ -238,18 +263,18 @@ const ContactUs = () => {
             </motion.div>
 
             {/* Embedded Google Map */}
-            <motion.div 
+            <motion.div
               variants={fadeInUp}
               className="bg-gray-200 h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg border-4 border-white"
             >
-              <iframe 
+              <iframe
                 title="FitVisor Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d56516.31625951268!2d85.2911132!3d27.7089603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb198a307baabf%3A0xb5137c1bf18db1ea!2sKathmandu%2044600!5e0!3m2!1sen!2snp!4v1680000000000!5m2!1sen!2snp" 
-                width="100%" 
-                height="100%" 
-                style={{ border: 0 }} 
-                allowFullScreen="" 
-                loading="lazy" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d56516.31625951268!2d85.2911132!3d27.7089603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb198a307baabf%3A0xb5137c1bf18db1ea!2sKathmandu%2044600!5e0!3m2!1sen!2snp!4v1680000000000!5m2!1sen!2snp"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="filter grayscale-[20%] hover:grayscale-0 transition-all duration-500"
               ></iframe>
@@ -265,7 +290,7 @@ const ContactUs = () => {
                   { icon: <FaLinkedin />, link: "#" },
                   { icon: <FaWhatsapp />, link: "#" }
                 ].map((social, idx) => (
-                  <motion.a 
+                  <motion.a
                     key={idx}
                     href={social.link}
                     whileHover={{ scale: 1.2, rotate: 5 }}
@@ -284,7 +309,7 @@ const ContactUs = () => {
       {/* ================= FAQ SECTION ================= */}
       <section className="bg-[#F3F4F6] py-20 px-6">
         <div className="max-w-3xl mx-auto">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -296,7 +321,7 @@ const ContactUs = () => {
 
           <div className="space-y-4">
             {faqData.map((faq, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -306,22 +331,19 @@ const ContactUs = () => {
               >
                 <button
                   onClick={() => toggleAccordion(index)}
-                  className={`w-full px-6 py-5 flex justify-between items-center text-left transition-colors duration-300 ${
-                    activeAccordion === index ? 'bg-[#DBEAFE]' : 'bg-white hover:bg-gray-50'
-                  }`}
+                  className={`w-full px-6 py-5 flex justify-between items-center text-left transition-colors duration-300 ${activeAccordion === index ? 'bg-[#DBEAFE]' : 'bg-white hover:bg-gray-50'
+                    }`}
                 >
-                  <span className={`font-semibold text-lg ${
-                    activeAccordion === index ? 'text-[#1E3A8A]' : 'text-gray-700'
-                  }`}>
+                  <span className={`font-semibold text-lg ${activeAccordion === index ? 'text-[#1E3A8A]' : 'text-gray-700'
+                    }`}>
                     {faq.question}
                   </span>
-                  <span className={`text-[#3B82F6] transform transition-transform duration-300 ${
-                    activeAccordion === index ? 'rotate-180' : 'rotate-0'
-                  }`}>
+                  <span className={`text-[#3B82F6] transform transition-transform duration-300 ${activeAccordion === index ? 'rotate-180' : 'rotate-0'
+                    }`}>
                     {activeAccordion === index ? <FaChevronUp /> : <FaChevronDown />}
                   </span>
                 </button>
-                
+
                 <AnimatePresence>
                   {activeAccordion === index && (
                     <motion.div

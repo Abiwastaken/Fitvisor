@@ -22,7 +22,7 @@ export default function AdminUsers({ onBack }) {
     const fetchUsers = async () => {
         setLoading(true)
         try {
-            const response = await fetch("http://localhost:5000/api/users")
+            const response = await fetch("http://localhost:8000/api/users")
             if (!response.ok) throw new Error("Failed to fetch users")
             const data = await response.json()
             setUsers(data)
@@ -36,7 +36,7 @@ export default function AdminUsers({ onBack }) {
     const fetchExercises = async () => {
         setLoading(true)
         try {
-            const response = await fetch("http://localhost:5000/api/exercises")
+            const response = await fetch("http://localhost:8000/api/exercises")
             if (!response.ok) throw new Error("Failed to fetch exercises")
             const data = await response.json()
             setExercises(data)
@@ -50,7 +50,7 @@ export default function AdminUsers({ onBack }) {
     const deleteExercise = async (id) => {
         if (!confirm("Are you sure you want to delete this session?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/exercises/${id}`, { method: 'DELETE' })
+            const response = await fetch(`http://localhost:8000/api/exercises/${id}`, { method: 'DELETE' })
             if (response.ok) {
                 setExercises(exercises.filter(ex => ex.id !== id))
             }
@@ -58,6 +58,30 @@ export default function AdminUsers({ onBack }) {
             alert("Failed to delete")
         }
     }
+
+    const updatePoints = async (id, currentPoints) => {
+        const newPoints = prompt("Enter new points:", currentPoints)
+        if (newPoints === null || newPoints === "") return // Cancelled
+        const pointsValue = parseInt(newPoints, 10)
+        if (isNaN(pointsValue)) return alert("Invalid number")
+
+        try {
+            const response = await fetch(`http://localhost:8000/api/users/${id}/points`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ points: pointsValue })
+            })
+
+            if (response.ok) {
+                setUsers(users.map(u => u.id === id ? { ...u, points: pointsValue } : u))
+            } else {
+                alert("Failed to update points")
+            }
+        } catch (err) {
+            alert("Error updating points")
+        }
+    }
+
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,6 +182,7 @@ export default function AdminUsers({ onBack }) {
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">User</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</th>
                                             <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Stats (Age/H/W)</th>
+                                            <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Points</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Joined</th>
                                             <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                                         </tr>
@@ -205,6 +230,15 @@ export default function AdminUsers({ onBack }) {
                                                             <span className="px-2 py-1 rounded-md bg-[#F3F4F6] text-xs font-bold text-slate-600" title="Height">{user.height || "-"}cm</span>
                                                             <span className="px-2 py-1 rounded-md bg-[#F3F4F6] text-xs font-bold text-slate-600" title="Weight">{user.weight || "-"}kg</span>
                                                         </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                        <button
+                                                            onClick={() => updatePoints(user.id, user.points || 0)}
+                                                            className="px-3 py-1 bg-blue-50 text-[#3B82F6] font-bold rounded-lg hover:bg-blue-100 transition-colors"
+                                                            title="Click to edit points"
+                                                        >
+                                                            {user.points || 0} pts
+                                                        </button>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500">
                                                         {new Date(user.created_at).toLocaleDateString()}
@@ -264,7 +298,7 @@ export default function AdminUsers({ onBack }) {
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                                         {ex.video_path ? (
                                                             <button
-                                                                onClick={() => setSelectedVideo(`http://localhost:5000/uploads/${ex.video_path}`)}
+                                                                onClick={() => setSelectedVideo(`http://localhost:8000/uploads/${ex.video_path}`)}
                                                                 className="text-[#3B82F6] hover:text-[#2563EB] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 mx-auto transition-colors"
                                                             >
                                                                 <FontAwesomeIcon icon={faPlay} />

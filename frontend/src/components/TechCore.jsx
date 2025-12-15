@@ -7,21 +7,21 @@ const TechCore = () => {
   const techFeatures = [
     {
       title: "AI & Computer Vision",
-      techs: "TensorFlow.js + MediaPipe",
+      techs: "TensorFlow + MediaPipe + OpenCV",
       description: "Real-time skeletal tracking directly in the browser. Our AI model analyzes 33 key body points at 30fps to ensure perfect form without sending video to a server.",
       icon: <FaBrain />,
       bg: "bg-white",
     },
     {
       title: "Reactive Frontend",
-      techs: "React + Framer Motion",
+      techs: "React + Framer Motion + Tailwind CSS ",
       description: "A buttery smooth UI that responds instantly. We use framer-motion for physics-based animations that make the interface feel alive and engaging.",
       icon: <FaReact />,
       bg: "bg-blue-50",
     },
     {
       title: "Real-time Database",
-      techs: "Supabase + PostgreSQL",
+      techs: "MySQL",
       description: "Instant data synchronization. Your leaderboard stats, workout history, and profile updates are synced across devices in milliseconds.",
       icon: <FaDatabase />,
       bg: "bg-white",

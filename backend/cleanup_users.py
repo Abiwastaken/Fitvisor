@@ -35,14 +35,14 @@ def cleanup_and_setup_admin():
         if not users:
             print("  No users found in database.")
 
-        # Step 2: Delete all unverified users
+        # Step 2: Delete ALL users
         print("\n" + "=" * 60)
-        print("DELETING UNVERIFIED USERS...")
+        print("DELETING ALL USERS...")
         print("=" * 60)
-        cursor.execute("DELETE FROM users WHERE is_verified = 0 OR is_verified IS NULL")
+        cursor.execute("DELETE FROM users")
         deleted_count = cursor.rowcount
         conn.commit()
-        print(f"  Deleted {deleted_count} unverified user(s).")
+        print(f"  Deleted {deleted_count} user(s).")
 
         # Step 3: Set up admin user (hridayamdr2007@gmail.com)
         admin_email = "hridayamdr2007@gmail.com"
@@ -54,30 +54,16 @@ def cleanup_and_setup_admin():
         print("SETTING UP ADMIN USER...")
         print("=" * 60)
 
-        # Check if admin already exists
-        cursor.execute("SELECT id, is_verified FROM users WHERE email = %s", (admin_email,))
-        existing_admin = cursor.fetchone()
-
-        if existing_admin:
-            # Update existing admin to be verified
-            cursor.execute(
-                "UPDATE users SET password_hash = %s, is_verified = 1, verification_code = NULL WHERE email = %s",
-                (hashed_password, admin_email)
-            )
-            conn.commit()
-            print(f"  Admin user '{admin_email}' already exists.")
-            print(f"  Password updated to 'admin' and marked as verified.")
-        else:
-            # Create new admin user (pre-verified)
-            cursor.execute(
-                """INSERT INTO users (name, email, password_hash, is_verified, verification_code) 
-                   VALUES (%s, %s, %s, 1, NULL)""",
-                (admin_name, admin_email, hashed_password)
-            )
-            conn.commit()
-            print(f"  Created admin user: {admin_email}")
-            print(f"  Password: admin")
-            print(f"  Status: Verified (no email verification needed)")
+        # Create new admin user (table should be empty now)
+        cursor.execute(
+            """INSERT INTO users (name, email, password_hash, is_verified, verification_code) 
+                VALUES (%s, %s, %s, 1, NULL)""",
+            (admin_name, admin_email, hashed_password)
+        )
+        conn.commit()
+        print(f"  Created admin user: {admin_email}")
+        print(f"  Password: admin")
+        print(f"  Status: Verified (no email verification needed)")
 
         # Step 4: Show remaining users
         print("\n" + "=" * 60)

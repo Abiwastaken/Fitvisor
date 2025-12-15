@@ -36,7 +36,7 @@ const Header = ({ isLoggedIn, onLogout, activePage, onNavigate, currentUser }) =
     { name: "Profile", id: "profile", icon: Users },
   ]
 
-  if (currentUser?.email === "admin@gmail.com" || currentUser?.email === "hridayamdr2007@gmail.com") {
+  if (currentUser?.email === "hridayamdr2007@gmail.com") {
     navItems.push({ name: "Data View", id: "admin", icon: Database })
   }
 

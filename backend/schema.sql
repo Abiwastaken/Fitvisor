@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     website VARCHAR(255),
     points INT DEFAULT 0,
     streak INT DEFAULT 0,
+    last_active_date DATE DEFAULT NULL,
     accepted_terms BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

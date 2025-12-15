@@ -39,7 +39,7 @@ const StatValue = ({ value, label, subtext, color = "text-[#1E3A8A]" }) => (
 )
 
 // Custom SVG Wave Chart
-const ActivityChart = () => (
+const ActivityChart = ({ isZero }) => (
   <div className="relative h-32 w-full mt-4">
     <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
       <defs>
@@ -55,9 +55,9 @@ const ActivityChart = () => (
 
       {/* The Wave Line */}
       <motion.path
-        d="M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15"
+        d={isZero ? "M0,35 L100,35" : "M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15"}
         fill="none"
-        stroke="#3B82F6"
+        stroke={isZero ? "#94A3B8" : "#3B82F6"}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -66,16 +66,18 @@ const ActivityChart = () => (
         transition={{ duration: 2, ease: "easeInOut" }}
       />
       {/* Fill Area */}
-      <motion.path
-        d="M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15 V40 H0 Z"
-        fill="url(#waveGradient)"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 1.5 }}
-      />
+      {!isZero && (
+        <motion.path
+          d="M0,35 Q10,25 20,30 T40,20 T60,10 T80,25 T100,15 V40 H0 Z"
+          fill="url(#waveGradient)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 1.5 }}
+        />
+      )}
 
       {/* Active Points */}
-      {[20, 60, 100].map((cx, i) => (
+      {!isZero && [20, 60, 100].map((cx, i) => (
         <motion.circle
           key={i}
           cx={cx}
@@ -142,6 +144,21 @@ export default function Dashboard({ currentUser, onSelectExercise, onNavigatePro
     filter === "all" ? EXERCISES : EXERCISES.filter(ex => ex.category === filter),
     [filter])
 
+  // Streak Logic
+  const streak = currentUser?.streak || 0
+  const isZeroStreak = streak === 0
+
+  const getStreakMessage = (days) => {
+    if (days === 0) return ["Start your journey!", "Time to begin!"]
+    if (days <= 3) return ["Great start!", "Keep it going!"]
+    if (days <= 7) return ["You're on fire!", "Unstoppable!"]
+    return ["Legendary!", "Top 1% consistency!"]
+  }
+
+  const streakMessages = getStreakMessage(streak)
+  // Simple random selection based on day to keep it stable-ish during render, or just pick first
+  const streakMessage = streakMessages[0]
+
   // If exercise is active, show the monitor
   if (activeExercise) {
     return <ExerciseMonitor exerciseType={activeExercise} userId={currentUser?.id} onBack={() => setActiveExercise(null)} />
@@ -203,35 +220,37 @@ export default function Dashboard({ currentUser, onSelectExercise, onNavigatePro
               </h2>
               <p className="text-slate-400 text-sm mt-1">Movement analysis over last 7 days</p>
             </div>
-            <div className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold flex items-center gap-1">
-              +12% vs last week
+            <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${isZeroStreak ? "bg-slate-100 text-slate-400" : "bg-green-50 text-green-600"}`}>
+              {isZeroStreak ? "No activity yet" : "+12% vs last week"}
             </div>
           </div>
 
-          <ActivityChart />
+          <ActivityChart isZero={isZeroStreak} />
 
           {/* Hover Glow Effect */}
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
         </BentoCard>
 
         {/* 2. Streak Card (Span 4) */}
-        <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white relative overflow-hidden" delay={0.1}>
+        <BentoCard className={`md:col-span-4 relative overflow-hidden text-white transition-colors duration-500 ${isZeroStreak ? "bg-slate-900 border-slate-800" : "bg-gradient-to-br from-[#1E3A8A] to-[#2563EB]"}`} delay={0.1}>
           {/* ... content ... */}
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
-              <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                <Flame size={24} className="text-orange-300" fill="currentColor" />
+              <div className={`p-2 rounded-lg backdrop-blur-sm ${isZeroStreak ? "bg-slate-800 text-slate-500" : "bg-white/10 text-orange-300"}`}>
+                <Flame size={24} fill="currentColor" />
               </div>
-              <span className="text-blue-200 font-medium text-sm">On Fire!</span>
+              <span className={`font-medium text-sm ${isZeroStreak ? "text-slate-400" : "text-blue-200"}`}>
+                {isZeroStreak ? "Inactive" : "On Fire!"}
+              </span>
             </div>
 
             <div className="mt-6">
-              <span className="text-6xl font-black tracking-tighter">7</span>
-              <span className="text-xl font-bold text-blue-200 ml-2">Day Streak</span>
+              <span className={`text-6xl font-black tracking-tighter ${isZeroStreak ? "text-slate-700" : "text-white"}`}>{streak}</span>
+              <span className={`text-xl font-bold ml-2 ${isZeroStreak ? "text-slate-600" : "text-blue-200"}`}>Day Streak</span>
             </div>
 
-            <div className="mt-4 text-sm text-blue-100 bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
-              Keep it up! You're in the top 5% this week.
+            <div className={`mt-4 text-sm p-3 rounded-xl backdrop-blur-md border ${isZeroStreak ? "text-slate-400 bg-slate-800/50 border-slate-700" : "text-blue-100 bg-white/10 border-white/10"}`}>
+              {streakMessage}
             </div>
           </div>
 
